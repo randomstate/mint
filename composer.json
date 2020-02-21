@@ -1,0 +1,32 @@
+{
+  "name": "randomstate/mint",
+  "description": "Boilerplate billing integration for Laravel & Stripe",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Connor Forsyth",
+      "email": "connor@randomstate.co.uk"
+    }
+  ],
+  "require": {
+    "randomstate/stripe": "^1.0"
+  },
+  "require-dev": {
+    "laravel/laravel": "^6.12",
+    "vlucas/phpdotenv": "^3.3",
+    "phpunit/phpunit": "^8.0",
+    "orchestra/testbench": "^4.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "RandomState\\Mint\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "RandomState\\Mint\\Tests\\": "tests",
+      "Tests\\": "vendor/laravel/laravel/tests"
+    }
+  }
+}
