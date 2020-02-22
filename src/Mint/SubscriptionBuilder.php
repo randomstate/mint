@@ -41,24 +41,22 @@ class SubscriptionBuilder
         return $this;
     }
 
-    public function create($paymentMethod)
+    public function create($paymentMethod = null)
     {
         /** @var BillingProvider $stripe */
         $stripe = app(BillingProvider::class);
-        $customerId = $this->billable->stripeCustomerId();
+        $customer = $this->billable->asStripe();
 
-        $paymentMethod = $stripe->paymentMethods()->retrieve($paymentMethod);
-
-        if($paymentMethod->customer !== $customerId) {
-            $paymentMethod->attach(['customer' => $customerId]);
+        if($paymentMethod) {
+            $this->billable->updateDefaultPaymentMethod($paymentMethod);
         }
 
         $payload = [
-            'customer' => $customerId,
+            'expand' => ['latest_invoice.payment_intent'],
+            'customer' => $customer->id,
             'items' => $this->items->map(function(SubscriptionItemBuilder $builder) {
                 return $builder->toStripePayload();
             })->toArray(),
-            'default_payment_method' => $paymentMethod->id,
         ];
 
         if(!$this->trialDays) {
@@ -80,6 +78,12 @@ class SubscriptionBuilder
             'trial_ends_at' => $stripeSubscription->trial_end,
             'status' => $stripeSubscription->status,
         ]);
+
+        if($subscription->incomplete()) {
+            (new Payment(
+                $stripeSubscription->latest_invoice->payment_intent
+            ))->validate();
+        }
 
         $items = [];
         foreach($stripeSubscription->items as $item) {

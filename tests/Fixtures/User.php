@@ -5,10 +5,14 @@ namespace RandomState\Mint\Tests\Fixtures;
 
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
+use RandomState\Mint\Mint\Payment;
 use RandomState\Mint\Mint\Subscription;
 use RandomState\Mint\Mint\SubscriptionBuilder;
 use RandomState\Mint\Mint\SubscriptionItem;
 use RandomState\Stripe\BillingProvider;
+use Stripe\Exception\CardException;
+use Stripe\Invoice;
 
 class User extends Model
 {
@@ -30,10 +34,17 @@ class User extends Model
         return $this->stripe_id;
     }
 
-    public function stripeCustomer()
+    public function asStripe($params = [])
     {
-        return app(BillingProvider::class)->customers()->retrieve($this->stripeCustomerId());
+        return app(BillingProvider::class)->customers()->retrieve(array_merge($params, [
+            'id' => $this->stripeCustomerId(),
+        ]));
     }
+
+//    public function updateDefaultPaymentMethod($paymentMethod)
+//    {
+//        $this->asStripe()->
+//    }
 
     public function subscribed($planId = null)
     {
@@ -54,15 +65,85 @@ class User extends Model
 
     public function invoice(array $options = [])
     {
-        $invoice = app(BillingProvider::class)->invoices()->create(array_merge($options, [
+        /** @var Invoice $invoice */
+        $invoice = $this->stripe()->invoices()->create(array_merge($options, [
             'customer' => $this->stripeCustomerId(),
         ]));
 
-        return $invoice->pay();
+        try {
+            return $invoice->pay();
+        } catch(CardException $e) {
+            $invoice = $this->stripe()->invoices()->retrieve([
+                'id' => $invoice->id,
+                'expand' => ['payment_intent']
+            ]);
+
+            (new Payment($invoice->payment_intent))->validate();
+        }
     }
 
     public function subscriptions()
     {
         return $this->hasMany(Subscription::class, 'billable_id');
+    }
+
+    public function defaultPaymentMethod()
+    {
+        $customer = $this->asStripe([
+            'expand' => [
+                'invoice_settings.default_payment_method',
+                'default_source',
+            ]
+        ]);
+
+        return $customer->invoice_settings->default_payment_method ?? $customer->default_source;
+    }
+
+    public function updateDefaultPaymentMethod($paymentMethod)
+    {
+        $stripePaymentMethod = $this->addPaymentMethod($paymentMethod);
+
+        $this->stripe()->customers()->update($this->stripeCustomerId(), [
+           'invoice_settings' => [
+               'default_payment_method' => $stripePaymentMethod->id,
+           ]
+        ]);
+
+        return $this;
+    }
+
+    /**
+     * @return BillingProvider
+     */
+    protected function stripe()
+    {
+        return app(BillingProvider::class);
+    }
+
+    public function addPaymentMethod($paymentMethod)
+    {
+        $stripePaymentMethod = $this->stripe()->paymentMethods()->retrieve($paymentMethod);
+        $stripePaymentMethod->attach([
+            'customer' => $this->stripeCustomerId(),
+        ]);
+
+        return $stripePaymentMethod;
+    }
+
+    public function removePaymentMethod($paymentMethod)
+    {
+        $stripePaymentMethod = $this->stripe()->paymentMethods()->retrieve($paymentMethod);
+        $stripePaymentMethod->detach();
+
+        return true;
+    }
+
+    public function paymentMethods($type = 'card')
+    {
+        return new Collection(
+            $this->stripe()
+                ->paymentMethods()
+                ->all(['customer' => $this->stripeCustomerId(), 'type' => $type])->data
+        );
     }
 }

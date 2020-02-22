@@ -78,6 +78,9 @@ class TestCase extends \Tests\TestCase
         return $this->plans[$nickname] = $this->stripe->plans()->create($payload);
     }
 
+    /**
+     * @return User
+     */
     protected function dummyBillable()
     {
         return User::create([

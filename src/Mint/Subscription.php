@@ -34,7 +34,7 @@ class Subscription extends Model
 
     public function active()
     {
-        return array_search($this->status, static::$activeStates) > -1;
+        return in_array($this->status, static::$activeStates);
     }
 
     public function onTrial()
@@ -47,6 +47,19 @@ class Subscription extends Model
         return $this->ends_at && $this->ends_at->isFuture();
     }
 
+    public function incomplete()
+    {
+        return in_array($this->status, [
+           StripeSubscription::STATUS_INCOMPLETE,
+           StripeSubscription::STATUS_INCOMPLETE_EXPIRED,
+        ]);
+    }
+
+    /**
+     * @param $plan
+     * @param $newPlan
+     * @return SubscriptionUpdater
+     */
     public function switch($plan, $newPlan)
     {
         /** @var SubscriptionItem $item */

@@ -34,6 +34,11 @@ class SubscriptionUpdater
         $this->subscription = $subscription;
     }
 
+    /**
+     * @param SubscriptionItem $item
+     * @param $newPlan
+     * @return $this
+     */
     public function switch(SubscriptionItem $item, $newPlan)
     {
         $this->switches[] = new PlanSwitch($item, $newPlan);
@@ -41,6 +46,10 @@ class SubscriptionUpdater
         return $this;
     }
 
+    /**
+     * @param bool $immediately
+     * @return $this
+     */
     public function invoiceImmediately($immediately = true)
     {
         $this->invoiceImmediately = $immediately;
