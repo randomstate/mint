@@ -12,7 +12,7 @@ class Plans
     /**
      * @var Mint
      */
-    protected Mint $mint;
+    protected $mint;
 
     public function __construct(Mint $mint)
     {

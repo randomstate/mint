@@ -17,7 +17,7 @@ class StripeWebhookSubscriberTest extends TestCase
     /**
      * @var WebhookListener
      */
-    protected WebhookListener $webhooks;
+    protected $webhooks;
 
     /**
      * @var Fixtures\User

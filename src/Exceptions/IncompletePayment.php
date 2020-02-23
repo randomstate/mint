@@ -20,4 +20,9 @@ abstract class IncompletePayment extends Exception
 
         $this->payment = $payment;
     }
+
+    public function payment()
+    {
+        return $this->payment;
+    }
 }

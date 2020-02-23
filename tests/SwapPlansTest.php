@@ -4,8 +4,6 @@
 namespace RandomState\Mint\Tests;
 
 
-use RandomState\Mint\Tests\Fixtures\User;
-
 class SwapPlansTest extends TestCase
 {
     /**

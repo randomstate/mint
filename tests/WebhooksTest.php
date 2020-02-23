@@ -17,7 +17,7 @@ class WebhooksTest extends TestCase
     /**
      * @var WebhookListener
      */
-    protected WebhookListener $webhooks;
+    protected $webhooks;
 
     protected function setUp(): void
     {

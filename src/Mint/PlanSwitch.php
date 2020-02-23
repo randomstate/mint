@@ -11,7 +11,7 @@ class PlanSwitch
     /**
      * @var SubscriptionItem
      */
-    protected SubscriptionItem $item;
+    protected $item;
 
     /**
      * @var string

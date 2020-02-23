@@ -12,7 +12,7 @@ class Mint
     /**
      * @var BillingProvider
      */
-    protected BillingProvider $stripe;
+    protected $stripe;
 
     public function __construct(BillingProvider $stripe)
     {

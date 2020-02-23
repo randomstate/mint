@@ -4,17 +4,15 @@
 namespace RandomState\Mint\Tests;
 
 
+use Illuminate\Support\Facades\Event;
+use RandomState\Mint\Events\PaymentActionRequiredOffSession;
+use RandomState\Mint\Events\PaymentErrorOffSession;
 use RandomState\Mint\Exceptions\PaymentActionRequired;
 use RandomState\Mint\Exceptions\PaymentError;
+use Stripe\Exception\CardException;
 
 class ScaTest extends TestCase
 {
-    /*
-     * Requires action
-     * Requires payment method
-     * Payment failed
-     */
-
     /**
      * @test
      */
@@ -81,5 +79,50 @@ class ScaTest extends TestCase
 
         // update payment method to one that is confirmed but fails
         // assert event is fired (due to invalid payment method)
+        Event::fake();
+
+        $billable = $this->dummyBillable();
+
+        $standardPlan = $this->dummyPlan('standard', 1000);
+        $proPlan = $this->dummyPlan('pro', 2000);
+
+        $billable->newSubscription($standardPlan->id)
+            ->create($this->validPaymentMethod()->id);
+
+
+        Event::assertNotDispatched(PaymentActionRequiredOffSession::class);
+        Event::assertNotDispatched(PaymentErrorOffSession::class);
+
+        $billable->updateDefaultPaymentMethod('pm_card_threeDSecure2Required');
+
+        $this->stripe->subscriptions()->update($billable->subscription()->stripe_id, [
+            'items' => [
+                [
+                    'id' => $billable->subscription()->items()->first()->stripe_id,
+                    'plan' => $proPlan->id,
+                ]
+            ],
+        ]);
+
+        try {
+            $billable->subscription()->invoice();
+        } catch(\Throwable $t) {}; // ignore immediate errors
+
+        // manually trigger sync that would happen in webhook:
+        $billable->subscription()->syncFromStripe($billable->subscription()->asStripe());
+
+        Event::assertDispatchedTimes(PaymentActionRequiredOffSession::class, 1);
+        Event::assertNotDispatched(PaymentErrorOffSession::class);
+
+        $billable->updateDefaultPaymentMethod('pm_card_chargeCustomerFail');
+        $invoice = $this->stripe->invoices()->retrieve($billable->subscription()->asStripe()->latest_invoice);
+        try {
+            $invoice->pay();
+        } catch(CardException $e) {};
+
+        $billable->subscription()->syncFromStripe($billable->subscription()->asStripe());
+
+        Event::assertDispatchedTimes(PaymentActionRequiredOffSession::class, 1);
+        Event::assertDispatchedTimes(PaymentErrorOffSession::class, 1);
     }
 }

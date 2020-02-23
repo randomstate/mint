@@ -13,7 +13,7 @@ class Payment
     /**
      * @var PaymentIntent
      */
-    protected PaymentIntent $intent;
+    protected $intent;
 
     public function __construct(PaymentIntent $intent)
     {
@@ -44,5 +44,10 @@ class Payment
     protected function status()
     {
         return $this->intent->status;
+    }
+
+    public function intent()
+    {
+        return $this->intent;
     }
 }

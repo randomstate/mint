@@ -7,7 +7,6 @@ namespace RandomState\Mint\Mint;
 use Illuminate\Support\Collection;
 use RandomState\Mint\Subscription;
 use RandomState\Mint\SubscriptionItem;
-use RandomState\Stripe\BillingProvider;
 use Stripe\Invoice;
 
 class SubscriptionUpdater
@@ -17,7 +16,7 @@ class SubscriptionUpdater
     /**
      * @var Subscription
      */
-    protected Subscription $subscription;
+    protected $subscription;
 
     /**
      * @var PlanSwitch[] | Collection
@@ -27,12 +26,12 @@ class SubscriptionUpdater
     /**
      * @var bool
      */
-    protected bool $invoiceImmediately = false;
+    protected $invoiceImmediately = false;
 
     /**
      * @var bool
      */
-    protected bool $skipTrial = false;
+    protected $skipTrial = false;
 
     /**
      * @var string | null

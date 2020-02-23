@@ -9,7 +9,6 @@ use Illuminate\Events\Dispatcher;
 use RandomState\Mint\Mint;
 use RandomState\Mint\Plan;
 use RandomState\Mint\Subscription;
-use RandomState\Mint\SubscriptionItem;
 use RandomState\Mint\Webhook;
 use Stripe\Event;
 use Stripe\Exception\InvalidRequestException;
@@ -19,7 +18,7 @@ class StripeWebhookSubscriber implements ShouldQueue
     /**
      * @var Mint
      */
-    protected Mint $mint;
+    protected $mint;
 
     public function __construct(Mint $mint)
     {

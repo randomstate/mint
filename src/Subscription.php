@@ -6,7 +6,12 @@ namespace RandomState\Mint;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use RandomState\Mint\Events\PaymentActionRequiredOffSession;
+use RandomState\Mint\Events\PaymentErrorOffSession;
+use RandomState\Mint\Exceptions\PaymentActionRequired;
+use RandomState\Mint\Exceptions\PaymentError;
 use RandomState\Mint\Mint\Billing;
+use RandomState\Mint\Mint\Payment;
 use RandomState\Mint\Mint\SubscriptionUpdater;
 use RandomState\Stripe\BillingProvider;
 use Stripe\Subscription as StripeSubscription;
@@ -161,7 +166,7 @@ class Subscription extends Model
         $this->status = $subscription->status;
         $this->trial_ends_at = $subscription->trial_end;
 
-        $endsAt = $subscription->cancel_at_period_end ?? $subscription->cancel_at;
+        $endsAt = $subscription->cancel_at;
 
         if($endsAt) {
             $this->ends_at = $endsAt;
@@ -169,6 +174,21 @@ class Subscription extends Model
 
         if($this->canceled()) {
             $this->ends_at = $subscription->ended_at;
+        }
+
+        // If active subscription but invoice went overdue from regular billing, check for SCA failure
+        if($this->pastDue()) {
+            try {
+                (new Payment(
+                    $this->asStripe([
+                        'expand' => ['latest_invoice.payment_intent']
+                    ])->latest_invoice->payment_intent
+                ))->validate();
+            } catch(PaymentActionRequired $e) {
+                event(new PaymentActionRequiredOffSession($e->payment()->intent()));
+            } catch(PaymentError $e) {
+                event(new PaymentErrorOffSession($e->payment()->intent()));
+            }
         }
 
         $this->save();

@@ -28,7 +28,7 @@ class SubscriptionsTest extends TestCase
             ->create($paymentMethod->id);
 
         $this->assertEquals($plan->id, $subscription->items()->first()->stripe_plan);
-        $this->assertEquals($billable->stripeCustomerId(), $subscription->stripe_customer);
+        $this->assertEquals($billable->id, $subscription->billable->id);
         $this->assertNull($subscription->trial_ends_at);
 
         // Check subscription status
@@ -55,8 +55,8 @@ class SubscriptionsTest extends TestCase
         $this->assertEquals(now()->addDays(10)->startOfDay(), $subscription->trial_ends_at->startOfDay());
 
         // Check subscription status
-        $this->assertTrue($subscription->isOnTrial());
-        $this->assertTrue($subscription->subscribed());
+        $this->assertTrue($subscription->onTrial());
+        $this->assertTrue($subscription->active());
 
         $this->assertTrue($billable->subscribed($plan->id));
         $this->assertTrue($billable->subscribed());

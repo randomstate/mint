@@ -12,18 +12,23 @@ use Money\Currency;
 use Money\Formatter\IntlMoneyFormatter;
 use Money\Money;
 use NumberFormatter;
+use RandomState\Mint\Mint\Billing;
 use RandomState\Mint\Mint\MoneyFormatter;
 use Stripe\Plan as StripePlan;
 
 class Plan extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, Billing;
 
     protected $guarded = [];
     protected $casts = ['metadata' => 'json'];
 
     public function syncFromStripe(StripePlan $plan)
     {
+        if(!is_object($plan->product)) {
+            $plan = $this->asStripe(['expand' => ['product']]);
+        }
+
         $this->nickname = $plan->nickname;
         $this->amount = $plan->amount;
         $this->currency = $plan->currency;
@@ -83,6 +88,13 @@ class Plan extends Model
         }
 
         return vsprintf("%s %s", [$this->interval_count, Str::plural($this->interval)]);
+    }
+
+    public function asStripe($params = [])
+    {
+        return $this->stripe()->plans()->retrieve(array_merge($params, [
+            'id' => $this->stripe_id,
+        ]));
     }
 
 }
