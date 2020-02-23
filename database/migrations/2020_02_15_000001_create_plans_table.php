@@ -15,7 +15,7 @@ class CreatePlansTable extends Migration
     {
         Schema::create('plans', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('stripe_id')->nullable()->index();
+            $table->string('stripe_id')->index();
             $table->string('nickname')->nullable();
             $table->integer('amount')->nullable();
             $table->string('currency');
@@ -24,6 +24,8 @@ class CreatePlansTable extends Migration
             $table->integer('trial_period_days')->nullable();
             $table->string('billing_scheme');
             $table->json('tiers')->nullable();
+            $table->json('metadata')->nullable();
+            $table->softDeletes();
 
             $table->timestamps();
         });

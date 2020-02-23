@@ -28,4 +28,9 @@ class Mint
     {
         return $this->stripe;
     }
+
+    public function billable($customerId)
+    {
+        return config('mint.model')::where('stripe_id', $customerId)->firstOrFail();
+    }
 }

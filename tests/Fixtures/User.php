@@ -6,16 +6,19 @@ namespace RandomState\Mint\Tests\Fixtures;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use RandomState\Mint\Mint\Billing;
 use RandomState\Mint\Mint\Payment;
-use RandomState\Mint\Mint\Subscription;
+use RandomState\Mint\Subscription;
 use RandomState\Mint\Mint\SubscriptionBuilder;
-use RandomState\Mint\Mint\SubscriptionItem;
+use RandomState\Mint\SubscriptionItem;
 use RandomState\Stripe\BillingProvider;
 use Stripe\Exception\CardException;
 use Stripe\Invoice;
 
 class User extends Model
 {
+    use Billing;
+
     protected $guarded = [];
 
     public function newSubscription(...$plans)
@@ -26,7 +29,7 @@ class User extends Model
     public function stripeCustomerId()
     {
         if (!$this->stripe_id) {
-            $customer = app(BillingProvider::class)->customers()->create();
+            $customer = $this->stripe()->customers()->create();
             $this->stripe_id = $customer->id;
             $this->save();
         }
@@ -36,15 +39,10 @@ class User extends Model
 
     public function asStripe($params = [])
     {
-        return app(BillingProvider::class)->customers()->retrieve(array_merge($params, [
+        return $this->stripe()->customers()->retrieve(array_merge($params, [
             'id' => $this->stripeCustomerId(),
         ]));
     }
-
-//    public function updateDefaultPaymentMethod($paymentMethod)
-//    {
-//        $this->asStripe()->
-//    }
 
     public function subscribed($planId = null)
     {
@@ -112,14 +110,6 @@ class User extends Model
         return $this;
     }
 
-    /**
-     * @return BillingProvider
-     */
-    protected function stripe()
-    {
-        return app(BillingProvider::class);
-    }
-
     public function addPaymentMethod($paymentMethod)
     {
         $stripePaymentMethod = $this->stripe()->paymentMethods()->retrieve($paymentMethod);
@@ -145,5 +135,13 @@ class User extends Model
                 ->paymentMethods()
                 ->all(['customer' => $this->stripeCustomerId(), 'type' => $type])->data
         );
+    }
+
+    /**
+     * @return Subscription | null
+     */
+    public function subscription()
+    {
+        return $this->subscriptions()->first();
     }
 }

@@ -5,13 +5,17 @@ namespace RandomState\Mint;
 
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Stripe\Plan as StripePlan;
 
 class Plan extends Model
 {
-    protected $guarded = [];
+    use SoftDeletes;
 
-    public function sync(StripePlan $plan)
+    protected $guarded = [];
+    protected $casts = ['metadata' => 'json'];
+
+    public function syncFromStripe(StripePlan $plan)
     {
         $this->nickname = $plan->nickname;
         $this->amount = $plan->amount;
@@ -21,6 +25,7 @@ class Plan extends Model
         $this->trial_period_days = $plan->trial_period_days;
         $this->billing_scheme = $plan->billing_scheme;
         $this->tiers = $plan->tiers;
+        $this->metadata = $plan->metadata->toArray();
 
         $this->save();
     }

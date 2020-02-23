@@ -5,8 +5,8 @@ namespace RandomState\Mint\Tests;
 
 
 use Illuminate\Support\Str;
-use RandomState\Mint\Mint\Subscription;
-use RandomState\Mint\Mint\SubscriptionItem;
+use RandomState\Mint\Subscription;
+use RandomState\Mint\SubscriptionItem;
 use RandomState\Mint\Tests\Fixtures\User;
 use Stripe\Stripe;
 use Stripe\Subscription as StripeSubscription;

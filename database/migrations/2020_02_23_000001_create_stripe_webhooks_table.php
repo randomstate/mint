@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateSubscriptionItemsTable extends Migration
+class CreateStripeWebhooksTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,17 +13,16 @@ class CreateSubscriptionItemsTable extends Migration
      */
     public function up()
     {
-        Schema::create('subscription_items', function (Blueprint $table) {
+        Schema::create('stripe_webhooks', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedBigInteger('subscription_id');
-
             $table->string('stripe_id');
-            $table->string('stripe_plan');
-            $table->unsignedInteger('quantity');
-
-            $table->foreign('subscription_id')->references('id')->on('subscriptions');
+            $table->string('api_version');
+            $table->json('payload');
+            $table->string('type');
+            $table->string('object_type');
+            $table->timestamp('stripe_created_at');
+            $table->json('request');
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 
@@ -34,6 +33,6 @@ class CreateSubscriptionItemsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('subscription_items');
+        Schema::dropIfExists('stripe_webhooks');
     }
 }

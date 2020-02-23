@@ -1,16 +1,20 @@
 <?php
 
 
-namespace RandomState\Mint\Mint;
+namespace RandomState\Mint;
 
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use RandomState\Mint\Mint\Billing;
+use RandomState\Mint\Mint\SubscriptionUpdater;
 use RandomState\Stripe\BillingProvider;
 use Stripe\Subscription as StripeSubscription;
 
 class Subscription extends Model
 {
+    use Billing;
+
     protected $guarded = [];
     protected $with = ['items'];
 
@@ -55,6 +59,21 @@ class Subscription extends Model
         ]);
     }
 
+    public function hasIncompletePayment()
+    {
+        return $this->pastDue() || $this->incomplete();
+    }
+
+    public function canceled()
+    {
+        return $this->status === StripeSubscription::STATUS_CANCELED;
+    }
+
+    public function pastDue()
+    {
+        return $this->status === StripeSubscription::STATUS_PAST_DUE;
+    }
+
     /**
      * @param $plan
      * @param $newPlan
@@ -62,6 +81,14 @@ class Subscription extends Model
      */
     public function switch($plan, $newPlan)
     {
+        if($plan instanceof \Stripe\Plan){
+            $plan = $plan->id;
+        }
+
+        if($newPlan instanceof \Stripe\Plan) {
+            $newPlan = $newPlan->id;
+        }
+
         /** @var SubscriptionItem $item */
         $item = $this->items()->firstWhere('stripe_plan', $plan);
 
@@ -71,7 +98,7 @@ class Subscription extends Model
 
     public function asStripe()
     {
-        return app(BillingProvider::class)->subscriptions()->retrieve([
+        return $this->stripe()->subscriptions()->retrieve([
             'id' => $this->stripe_id,
         ]);
     }
@@ -88,7 +115,7 @@ class Subscription extends Model
 
     public function cancel()
     {
-        $subscription = app(BillingProvider::class)->subscriptions()->update($this->stripe_id, [
+        $subscription = $this->stripe()->subscriptions()->update($this->stripe_id, [
             'cancel_at_period_end' => true,
         ]);
 
@@ -113,7 +140,7 @@ class Subscription extends Model
 
     public function resume()
     {
-        $subscription = app(BillingProvider::class)->subscriptions()->update($this->stripe_id, [
+        $subscription = $this->stripe()->subscriptions()->update($this->stripe_id, [
             'cancel_at_period_end' => false,
             'items' => $this->items->map(function (SubscriptionItem $item) {
                 return [
@@ -134,7 +161,38 @@ class Subscription extends Model
         $this->status = $subscription->status;
         $this->trial_ends_at = $subscription->trial_end;
 
+        $endsAt = $subscription->cancel_at_period_end ?? $subscription->cancel_at;
+
+        if($endsAt) {
+            $this->ends_at = $endsAt;
+        }
+
+        if($this->canceled()) {
+            $this->ends_at = $subscription->ended_at;
+        }
+
         $this->save();
+
+        return $this;
+    }
+
+    public function syncItemsFromStripe(StripeSubscription $subscription)
+    {
+        $itemIds = [];
+        foreach($subscription->items->autoPagingIterator() as $item) {
+            $itemIds[] = $item->id;
+
+            $this->items()->updateOrCreate([
+                'stripe_id' => $item->id,
+            ], SubscriptionItem::syncFromStripePayload($item));
+        }
+
+        // remove orphaned items
+        $orphaned = $this->items()->whereNotIn('stripe_id', $itemIds)->get();
+
+        foreach($orphaned as $orphan) {
+            $orphan->delete();
+        }
 
         return $this;
     }

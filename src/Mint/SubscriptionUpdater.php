@@ -4,10 +4,13 @@
 namespace RandomState\Mint\Mint;
 
 
+use RandomState\Mint\Subscription;
+use RandomState\Mint\SubscriptionItem;
 use RandomState\Stripe\BillingProvider;
 
 class SubscriptionUpdater
 {
+    use Billing;
 
     /**
      * @var Subscription
@@ -66,11 +69,8 @@ class SubscriptionUpdater
 
     public function update()
     {
-        /** @var BillingProvider $stripe */
-        $stripe = app(BillingProvider::class);
-
         $subscription = $this->subscription;
-        $stripeSubscription = $stripe->subscriptions()->update($subscription->stripe_id, [
+        $stripeSubscription = $this->stripe()->subscriptions()->update($subscription->stripe_id, [
             'items' => [
                 array_map(function(PlanSwitch $switch) {
                     return [

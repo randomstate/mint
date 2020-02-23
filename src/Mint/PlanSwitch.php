@@ -4,6 +4,8 @@
 namespace RandomState\Mint\Mint;
 
 
+use RandomState\Mint\SubscriptionItem;
+
 class PlanSwitch
 {
     /**

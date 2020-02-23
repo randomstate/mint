@@ -24,7 +24,7 @@ class Plans
         foreach($planIds as $planId) {
             $plan = $this->mint->stripe()->plans()->retrieve($planId);
 
-            Plan::firstOrNew(['stripe_id' => $planId])->sync($plan);
+            Plan::firstOrNew(['stripe_id' => $planId])->syncFromStripe($plan);
         }
     }
 }

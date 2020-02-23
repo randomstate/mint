@@ -6,15 +6,16 @@ namespace RandomState\Mint\Mint;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use RandomState\Mint\Tests\Fixtures\Billable;
-use RandomState\Mint\Tests\Fixtures\Customer;
+use RandomState\Mint\Subscription;
+use RandomState\Mint\SubscriptionItem;
 use RandomState\Mint\Tests\Fixtures\User;
-use RandomState\Stripe\BillingProvider;
 
 class SubscriptionBuilder
 {
+    use Billing;
+
     /**
-     * @var Customer
+     * @var Billable
      */
     protected $billable;
 
@@ -43,8 +44,6 @@ class SubscriptionBuilder
 
     public function create($paymentMethod = null)
     {
-        /** @var BillingProvider $stripe */
-        $stripe = app(BillingProvider::class);
         $customer = $this->billable->asStripe();
 
         if($paymentMethod) {
@@ -65,7 +64,7 @@ class SubscriptionBuilder
             $payload['trial_end'] = $this->getTrialEnd();
         }
 
-        $stripeSubscription = $stripe
+        $stripeSubscription = $this->stripe()
             ->subscriptions()
             ->create($payload);
 

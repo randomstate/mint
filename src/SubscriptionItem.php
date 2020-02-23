@@ -1,14 +1,19 @@
 <?php
 
 
-namespace RandomState\Mint\Mint;
+namespace RandomState\Mint;
 
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use RandomState\Mint\Mint\Billing;
+use RandomState\Mint\Mint\SubscriptionItemBuilder;
 use RandomState\Stripe\BillingProvider;
 
 class SubscriptionItem extends Model
 {
+    use Billing, SoftDeletes;
+
     protected $guarded = [];
 
     public static function build(string $planId)
@@ -39,7 +44,7 @@ class SubscriptionItem extends Model
 
     public function asStripe()
     {
-        return app(BillingProvider::class)->subscriptions()->items()->retrieve([
+        return $this->stripe()->subscriptions()->items()->retrieve([
            'id' => $this->stripe_id,
         ]);
     }
@@ -56,9 +61,16 @@ class SubscriptionItem extends Model
 
     public function syncFromStripe(\Stripe\SubscriptionItem $stripeItem)
     {
-        $this->stripe_plan = $stripeItem->plan->id;
-        $this->quantity = $stripeItem->quantity;
+        $this->fill($this->syncFromStripePayload($stripeItem));
 
         return $this->save();
+    }
+
+    public static function syncFromStripePayload(\Stripe\SubscriptionItem $stripeItem)
+    {
+        return [
+          'stripe_plan' => $stripeItem->plan->id,
+          'quantity' => $stripeItem->quantity,
+        ];
     }
 }
