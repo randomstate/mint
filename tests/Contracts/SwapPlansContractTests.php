@@ -1,10 +1,10 @@
 <?php
 
 
-namespace RandomState\Mint\Tests;
+namespace RandomState\Mint\Tests\Contracts;
 
 
-class SwapPlansTest extends TestCase
+trait SwapPlansContractTests
 {
     /**
      * @test
@@ -27,7 +27,7 @@ class SwapPlansTest extends TestCase
             ->update();
 
         $this->assertEquals($pro->id, $subscription->items()->first()->stripe_plan);
-        $this->assertEquals($latestInvoiceId,$subscription->asStripe()->latest_invoice);
+        $this->assertEquals($latestInvoiceId, $subscription->asStripe()->latest_invoice);
     }
 
     /**
@@ -50,11 +50,10 @@ class SwapPlansTest extends TestCase
         $billable->subscriptions()->first()
             ->switch($standard->id, $pro->id)
             ->invoiceImmediately()
-            ->update()
-        ;
+            ->update();
 
         $this->assertEquals($pro->id, $subscription->items()->first()->stripe_plan);
-        $this->assertNotEquals($latestInvoiceId,$subscription->asStripe()->latest_invoice);
+        $this->assertNotEquals($latestInvoiceId, $subscription->asStripe()->latest_invoice);
     }
 
     /**
@@ -76,8 +75,7 @@ class SwapPlansTest extends TestCase
         $billable->subscriptions()->first()
             ->switch($standard->id, $pro->id)
             ->skipTrial()
-            ->update()
-        ;
+            ->update();
 
         $this->assertFalse($subscription->fresh()->onTrial());
     }

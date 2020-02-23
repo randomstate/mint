@@ -1,10 +1,10 @@
 <?php
 
 
-namespace RandomState\Mint\Tests;
+namespace RandomState\Mint\Tests\Contracts;
 
 
-class SubscriptionPreviewsTest extends TestCase
+trait SubscriptionPreviewsContractTests
 {
     /**
      * @test

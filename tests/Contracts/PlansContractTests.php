@@ -1,12 +1,12 @@
 <?php
 
 
-namespace RandomState\Mint\Tests;
+namespace RandomState\Mint\Tests\Contracts;
 
 
 use RandomState\Mint\Plan;
 
-class PlansTest extends TestCase
+trait PlansContractTests
 {
     /**
      * @test

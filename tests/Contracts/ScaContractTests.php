@@ -1,7 +1,7 @@
 <?php
 
 
-namespace RandomState\Mint\Tests;
+namespace RandomState\Mint\Tests\Contracts;
 
 
 use Illuminate\Support\Facades\Event;
@@ -11,7 +11,7 @@ use RandomState\Mint\Exceptions\PaymentActionRequired;
 use RandomState\Mint\Exceptions\PaymentError;
 use Stripe\Exception\CardException;
 
-class ScaTest extends TestCase
+trait ScaContractTests
 {
     /**
      * @test

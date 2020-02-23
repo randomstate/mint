@@ -1,7 +1,7 @@
 <?php
 
 
-namespace RandomState\Mint\Tests;
+namespace RandomState\Mint\Tests\Contracts;
 
 
 use Illuminate\Routing\Router;
@@ -12,29 +12,12 @@ use RandomState\Stripe\Stripe\WebhookListener;
 use RandomState\Stripe\Stripe\WebhookSigner;
 use Stripe\Event;
 
-class WebhooksTest extends TestCase
+trait WebhooksContractTests
 {
     /**
      * @var WebhookListener
      */
     protected $webhooks;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        /** @var Router $router */
-        $router = $this->app['router'];
-
-        $router->group([], function () {
-            Route::mint();
-        });
-
-        $this->webhooks = new WebhookListener(
-            new Events(config('mint.secret_key')),
-            new WebhookSigner(config('mint.secret_key'))
-        );
-    }
 
     /**
      * @test
@@ -42,13 +25,16 @@ class WebhooksTest extends TestCase
     public function rejects_invalid_stripe_webhooks()
     {
         $this->webhooks->listen(function (Event $event, $signature) {
-            $this->postJson('/webhooks/stripe', $event->jsonSerialize(),
+            $this->postJson(
+                '/webhooks/stripe',
+                $event->jsonSerialize(),
                 [
                     'stripe-signature' => 'not_real_signature',
-                ])->assertStatus(403);
+                ]
+            )->assertStatus(403);
         });
-        
-        $this->webhooks->during(function() {
+
+        $this->webhooks->during(function () {
             $this->stripe->customers()->create();
         });
     }
@@ -61,13 +47,16 @@ class WebhooksTest extends TestCase
         LaravelEvent::fake();
 
         $this->webhooks->listen(function (Event $event, $signature) {
-            $this->postJson('/webhooks/stripe', $event->jsonSerialize(),
+            $this->postJson(
+                '/webhooks/stripe',
+                $event->jsonSerialize(),
                 [
                     'stripe-signature' => $signature
-                ])->assertStatus(200);
+                ]
+            )->assertStatus(200);
         });
 
-        $this->webhooks->during(function() {
+        $this->webhooks->during(function () {
             $this->stripe->customers()->create();
         });
 

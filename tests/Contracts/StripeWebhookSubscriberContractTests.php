@@ -1,7 +1,7 @@
 <?php
 
 
-namespace RandomState\Mint\Tests;
+namespace RandomState\Mint\Tests\Contracts;
 
 
 use Illuminate\Routing\Router;
@@ -12,7 +12,7 @@ use RandomState\Stripe\Stripe\WebhookListener;
 use RandomState\Stripe\Stripe\WebhookSigner;
 use Stripe\Event;
 
-class StripeWebhookSubscriberTest extends TestCase
+trait StripeWebhookSubscriberContractTests
 {
     /**
      * @var WebhookListener

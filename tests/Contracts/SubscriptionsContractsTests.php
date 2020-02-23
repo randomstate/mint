@@ -1,7 +1,7 @@
 <?php
 
 
-namespace RandomState\Mint\Tests;
+namespace RandomState\Mint\Tests\Contracts;
 
 
 use Illuminate\Support\Str;
@@ -11,7 +11,7 @@ use Stripe\Stripe;
 use Stripe\Subscription as StripeSubscription;
 use Stripe\TaxRate;
 
-class SubscriptionsTest extends TestCase
+trait SubscriptionsContractsTests
 {
     /**
      * @test
@@ -170,11 +170,11 @@ class SubscriptionsTest extends TestCase
 
         $this->assertTrue($subscription->onGracePeriod());
     }
-    
+
     /**
      * @test
      */
-    public function can_cancel_a_subscription_immediately() 
+    public function can_cancel_a_subscription_immediately()
     {
         $paymentMethod = $this->validPaymentMethod();
         $plan = $this->dummyPlan('test');
@@ -214,11 +214,11 @@ class SubscriptionsTest extends TestCase
         $this->assertTrue($subscription->active());
         $this->assertNull($subscription->ends_at);
     }
-    
+
     /**
      * @test
      */
-    public function can_apply_coupon_when_creating() 
+    public function can_apply_coupon_when_creating()
     {
         $paymentMethod = $this->validPaymentMethod();
         $plan = $this->dummyPlan('test', 10000);
@@ -254,8 +254,7 @@ class SubscriptionsTest extends TestCase
 
         $subscription->makeChanges()
             ->addCoupon($coupon->id)
-            ->update()
-        ;
+            ->update();
 
         $this->assertEquals($coupon->id, $subscription->asStripe()->discount->coupon->id);
     }

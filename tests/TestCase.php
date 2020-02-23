@@ -36,7 +36,7 @@ class TestCase extends \Tests\TestCase
 
     public function createApplication()
     {
-        $app = require __DIR__.'/../vendor/laravel/laravel/bootstrap/app.php';
+        $app = require __DIR__ . '/../vendor/laravel/laravel/bootstrap/app.php';
         $app->useEnvironmentPath(__DIR__ . '/..');
 
         $app->make(Kernel::class)->bootstrap();
@@ -47,7 +47,9 @@ class TestCase extends \Tests\TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
         $this->app->register(MintServiceProvider::class);
+
         $this->stripe = $this->app->make(BillingProvider::class);
         $this->mint = $this->app->make(Mint::class);
         $this->faker = $this->app->make(Generator::class);
@@ -57,7 +59,7 @@ class TestCase extends \Tests\TestCase
 
     protected function dummyPlan($nickname, $amount = null, $trialDays = null)
     {
-        if($this->plans[$nickname] ?? false) {
+        if ($this->plans[$nickname] ?? false) {
             return $this->plans[$nickname];
         }
 
@@ -71,7 +73,7 @@ class TestCase extends \Tests\TestCase
             ]
         ];
 
-        if($trialDays) {
+        if ($trialDays) {
             $payload['trial_period_days'] = $trialDays;
         }
 
