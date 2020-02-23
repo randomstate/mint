@@ -7,7 +7,6 @@ namespace RandomState\Mint\Tests;
 use Illuminate\Support\Str;
 use RandomState\Mint\Subscription;
 use RandomState\Mint\SubscriptionItem;
-use RandomState\Mint\Tests\Fixtures\User;
 use Stripe\Stripe;
 use Stripe\Subscription as StripeSubscription;
 use Stripe\TaxRate;
@@ -214,5 +213,50 @@ class SubscriptionsTest extends TestCase
 
         $this->assertTrue($subscription->active());
         $this->assertNull($subscription->ends_at);
+    }
+    
+    /**
+     * @test
+     */
+    public function can_apply_coupon_when_creating() 
+    {
+        $paymentMethod = $this->validPaymentMethod();
+        $plan = $this->dummyPlan('test', 10000);
+        $coupon = $this->dummyCoupon(40);
+
+        $billable = $this->dummyBillable();
+
+        $subscription = $billable->newSubscription($plan->id)
+            ->withCoupon($coupon->id)
+            ->create($paymentMethod->id);
+
+        // assert latest invoice contained charge for 6000
+        $amount = $subscription->asStripe([
+            'expand' => ['latest_invoice'],
+        ])->latest_invoice->amount_due;
+
+        $this->assertEquals(6000, $amount);
+    }
+
+    /**
+     * @test
+     */
+    public function can_apply_coupon_when_updating()
+    {
+        $paymentMethod = $this->validPaymentMethod();
+        $plan = $this->dummyPlan('test', 10000);
+        $coupon = $this->dummyCoupon(40);
+
+        $billable = $this->dummyBillable();
+
+        $subscription = $billable->newSubscription($plan->id)
+            ->create($paymentMethod->id);
+
+        $subscription->makeChanges()
+            ->addCoupon($coupon->id)
+            ->update()
+        ;
+
+        $this->assertEquals($coupon->id, $subscription->asStripe()->discount->coupon->id);
     }
 }

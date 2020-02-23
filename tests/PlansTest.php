@@ -37,5 +37,29 @@ class PlansTest extends TestCase
         $this->assertEquals(10000, $plan->amount);
         $this->assertEquals('starter', $plan->nickname);
         $this->assertEquals(4, $plan->trial_period_days);
+        $this->assertEquals('test product', $plan->product_name);
+    }
+
+    /**
+     * @test
+     */
+    public function can_get_price_description()
+    {
+        $plan = $this->stripe->plans()->create([
+            'currency' => 'usd',
+            'interval' => 'month',
+            'amount' => 10000,
+            'nickname' => 'starter',
+            'trial_period_days' => 4,
+            'product' => [
+                'name' => 'test product',
+                'type' => 'service',
+            ]
+        ]);
+
+        $this->mint->plans()->sync($plan->id);
+
+        $plan = Plan::first();
+        $this->assertEquals('Free for 4 days then $100.00 every month', $plan->price_description);
     }
 }

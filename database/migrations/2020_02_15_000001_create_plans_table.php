@@ -24,7 +24,12 @@ class CreatePlansTable extends Migration
             $table->integer('trial_period_days')->nullable();
             $table->string('billing_scheme');
             $table->json('tiers')->nullable();
+            $table->string('tiers_mode')->nullable();
             $table->json('metadata')->nullable();
+            $table->string('product_name');
+            $table->string('product_description')->nullable();
+            $table->string('product_unit_label')->nullable();
+            $table->string('custom_price_description')->nullable();
             $table->softDeletes();
 
             $table->timestamps();

@@ -10,13 +10,17 @@
     }
   ],
   "require": {
-    "randomstate/stripe": "^1.0"
+    "randomstate/stripe": "^1.0",
+    "moneyphp/money": "^3.3"
   },
   "require-dev": {
     "laravel/laravel": "^6.12",
     "vlucas/phpdotenv": "^3.3",
     "phpunit/phpunit": "^8.0",
     "orchestra/testbench": "^4.0"
+  },
+  "suggest": {
+    "ext-intl": "*"
   },
   "autoload": {
     "psr-4": {

@@ -22,7 +22,10 @@ class Plans
     public function sync(...$planIds)
     {
         foreach($planIds as $planId) {
-            $plan = $this->mint->stripe()->plans()->retrieve($planId);
+            $plan = $this->mint->stripe()->plans()->retrieve([
+                'id' => $planId,
+                'expand' => ['product'],
+            ]);
 
             Plan::firstOrNew(['stripe_id' => $planId])->syncFromStripe($plan);
         }

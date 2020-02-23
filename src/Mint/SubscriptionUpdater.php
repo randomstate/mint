@@ -4,9 +4,11 @@
 namespace RandomState\Mint\Mint;
 
 
+use Illuminate\Support\Collection;
 use RandomState\Mint\Subscription;
 use RandomState\Mint\SubscriptionItem;
 use RandomState\Stripe\BillingProvider;
+use Stripe\Invoice;
 
 class SubscriptionUpdater
 {
@@ -18,9 +20,9 @@ class SubscriptionUpdater
     protected Subscription $subscription;
 
     /**
-     * @var PlanSwitch[]
+     * @var PlanSwitch[] | Collection
      */
-    protected array $switches = [];
+    protected $switches;
 
     /**
      * @var bool
@@ -32,9 +34,15 @@ class SubscriptionUpdater
      */
     protected bool $skipTrial = false;
 
+    /**
+     * @var string | null
+     */
+    protected $coupon = null;
+
     public function __construct(Subscription $subscription)
     {
         $this->subscription = $subscription;
+        $this->switches = new Collection();
     }
 
     /**
@@ -44,7 +52,7 @@ class SubscriptionUpdater
      */
     public function switch(SubscriptionItem $item, $newPlan)
     {
-        $this->switches[] = new PlanSwitch($item, $newPlan);
+        $this->switches->push(new PlanSwitch($item, $newPlan));
 
         return $this;
     }
@@ -71,16 +79,15 @@ class SubscriptionUpdater
     {
         $subscription = $this->subscription;
         $stripeSubscription = $this->stripe()->subscriptions()->update($subscription->stripe_id, [
-            'items' => [
-                array_map(function(PlanSwitch $switch) {
-                    return [
-                        'id' => $switch->item()->stripe_id,
-                        'plan' => $switch->newPlan(),
-                    ];
-                }, $this->switches)
-            ],
+            'items' => $this->switches->map(function (PlanSwitch $switch) {
+                return [
+                  'id' => $switch->item()->stripe_id,
+                  'plan' => $switch->newPlan(),
+                ];
+            })->toArray(),
             'proration_behavior' => $this->prorationBehavior(),
-            'trial_end' => ($subscription->onTrial() && !$this->skipTrial) ? $subscription->trial_ends_at->getTimestamp() : 'now',
+            'trial_end' => $this->trialEnd(),
+            'coupon' => $this->coupon,
         ]);
 
         if ($this->invoiceImmediately) {
@@ -96,9 +103,36 @@ class SubscriptionUpdater
         return true;
     }
 
+    public function addCoupon($coupon)
+    {
+        $this->coupon = $coupon;
+
+        return $this;
+    }
+
+    protected function trialEnd()
+    {
+        $subscription = $this->subscription;
+        return ($subscription->onTrial() && !$this->skipTrial) ? $subscription->trial_ends_at->getTimestamp() : 'now';
+    }
+
+    public function preview()
+    {
+        return Invoice::upcoming([
+            'subscription' => $this->subscription->stripe_id,
+            'subscription_items' => $this->switches->map(function (PlanSwitch $switch) {
+                return [
+                    'id' => $switch->item()->stripe_id,
+                    'plan' => $switch->newPlan(),
+                ];
+            })->toArray(),
+            'coupon' => $this->coupon,
+            'subscription_trial_end' => $this->trialEnd(),
+        ]);
+    }
+
     protected function prorationBehavior()
     {
         return 'create_prorations';
-//        return $this->invoiceImmediately ? 'create_prorations' : 'none';
     }
 }

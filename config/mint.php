@@ -10,4 +10,6 @@ return [
         'sync' => env("MINT_WEBHOOK_SYNC", true),
     ],
     'api_version' => '2019-12-03',
+    'currency' => 'usd',
+    'currency_locale' => 'en',
 ];

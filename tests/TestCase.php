@@ -90,6 +90,14 @@ class TestCase extends \Tests\TestCase
         ]);
     }
 
+    protected function dummyCoupon($percent)
+    {
+        return $this->stripe->coupons()->create([
+            'duration' => 'forever',
+            'percent_off' => $percent,
+        ]);
+    }
+
     protected function validPaymentMethod()
     {
         return $this->stripe->paymentMethods()->create([

@@ -96,11 +96,11 @@ class Subscription extends Model
             ->switch($item, $newPlan);
     }
 
-    public function asStripe()
+    public function asStripe($params = [])
     {
-        return $this->stripe()->subscriptions()->retrieve([
+        return $this->stripe()->subscriptions()->retrieve(array_merge($params,[
             'id' => $this->stripe_id,
-        ]);
+        ]));
     }
 
     public function billable()
@@ -195,5 +195,10 @@ class Subscription extends Model
         }
 
         return $this;
+    }
+
+    public function makeChanges()
+    {
+        return new SubscriptionUpdater($this);
     }
 }

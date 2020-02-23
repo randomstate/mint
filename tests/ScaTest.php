@@ -66,4 +66,20 @@ class ScaTest extends TestCase
             ->invoiceImmediately()
             ->update();
     }
+
+    /**
+     * @test
+     */
+    public function off_session_payment_failed_events_are_dispatched()
+    {
+        // create a user with a subscription that fails SCA
+        // assert events not fired
+
+        // change default payment method to one that requires 3d secure
+        // change subscription so that user is billed
+        // assert event is fired (due to confirmation required)
+
+        // update payment method to one that is confirmed but fails
+        // assert event is fired (due to invalid payment method)
+    }
 }
