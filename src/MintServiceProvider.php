@@ -30,6 +30,11 @@ class MintServiceProvider extends ServiceProvider
 
         BaseStripe::setApiVersion('2019-12-03');
         BaseStripe::setApiKey(config('mint.secret_key'));
+
+        Route::macro('mint', function () {
+            Route::post(config('mint.webhooks.path'),
+                [StripeWebhookController::class, 'process'])->name('mint.stripe.webhook');
+        });
     }
 
     public function register()
@@ -43,11 +48,6 @@ class MintServiceProvider extends ServiceProvider
                 config('mint.webhooks.signing_secret'),
                 config('mint.tolerance'),
             );
-        });
-
-        Route::macro('mint', function () {
-            Route::post(config('mint.webhooks.path'),
-                [StripeWebhookController::class, 'process'])->name('mint.stripe.webhook');
         });
 
         $this->provideTestExpansions();
