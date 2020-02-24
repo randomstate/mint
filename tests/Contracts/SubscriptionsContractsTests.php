@@ -230,12 +230,7 @@ trait SubscriptionsContractsTests
             ->withCoupon($coupon->id)
             ->create($paymentMethod->id);
 
-        // assert latest invoice contained charge for 6000
-        $amount = $subscription->asStripe([
-            'expand' => ['latest_invoice'],
-        ])->latest_invoice->amount_due;
-
-        $this->assertEquals(6000, $amount);
+        $this->assertEquals($coupon->id, $subscription->asStripe()->discount->coupon->id);
     }
 
     /**

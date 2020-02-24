@@ -41,7 +41,7 @@ trait BillableContractTests
         $pm = $billable->addPaymentMethod('pm_card_visa');
         $billable->removePaymentMethod($pm->id);
 
-        $this->assertnull($pm->refresh()->customer);
+        $this->assertNull($pm->refresh()->customer);
     }
 
     /**
@@ -56,7 +56,5 @@ trait BillableContractTests
         $paymentMethods = $billable->paymentMethods();
 
         $this->assertCount(2, $paymentMethods);
-        $this->assertEquals('mastercard', $paymentMethods->first()->card->brand);
-        $this->assertEquals('visa', $paymentMethods->get(1)->card->brand);
     }
 }

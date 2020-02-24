@@ -13,6 +13,7 @@ use RandomState\Mint\Http\Middleware\VerifyStripeSignature;
 use RandomState\Stripe\BillingProvider;
 use RandomState\Stripe\Stripe;
 use Stripe\Stripe as BaseStripe;
+use RandomState\Stripe\Fake;
 
 class MintServiceProvider extends ServiceProvider
 {
@@ -47,6 +48,42 @@ class MintServiceProvider extends ServiceProvider
         Route::macro('mint', function () {
             Route::post(config('mint.webhooks.path'),
                 [StripeWebhookController::class, 'process'])->name('mint.stripe.webhook');
+        });
+
+        $this->provideTestExpansions();
+    }
+
+    protected function provideTestExpansions()
+    {
+        Fake\Customer::expand('invoice_settings', function($customer) {
+            return new class($customer) {
+                protected $customer;
+
+                public $default_payment_method;
+
+                public function __construct($customer)
+                {
+                    $this->customer = $customer;
+                    $this->default_payment_method = app(BillingProvider::class)->paymentMethods()->retrieve($this->customer->invoice_settings->default_payment_method);
+                }
+
+                public function expandDefaultPaymentMethod()
+                {
+                    return $this->default_payment_method;
+                }
+            };
+        });
+
+        Fake\Customer::expand('default_source', function($customer) {
+            return app(Fake\DummySourceFactory::class)->build($customer->invoice_settings->default_payment_method);
+        });
+
+        Fake\Plan::expand('product', function($plan) {
+            return $plan->product;
+        });
+
+        Fake\Subscription::expand('latest_invoice', function() {
+            return Fake\Invoice::constructFrom([]);
         });
     }
 }

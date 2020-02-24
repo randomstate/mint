@@ -10,7 +10,7 @@
     }
   ],
   "require": {
-    "randomstate/stripe": "^1.0",
+    "randomstate/stripe": "^1.2",
     "moneyphp/money": "^3.3"
   },
   "require-dev": {

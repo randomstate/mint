@@ -8,6 +8,9 @@ use RandomState\Mint\Tests\TestCase;
 use RandomState\Stripe\BillingProvider;
 use RandomState\Stripe\Stripe;
 
+/**
+ * @group integration
+ */
 class StripeTest extends TestCase
 {
     /**

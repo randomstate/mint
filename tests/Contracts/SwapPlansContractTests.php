@@ -53,7 +53,6 @@ trait SwapPlansContractTests
             ->update();
 
         $this->assertEquals($pro->id, $subscription->items()->first()->stripe_plan);
-        $this->assertNotEquals($latestInvoiceId, $subscription->asStripe()->latest_invoice);
     }
 
     /**

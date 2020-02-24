@@ -12,6 +12,9 @@ use RandomState\Stripe\Stripe\Events;
 use RandomState\Stripe\Stripe\WebhookListener;
 use RandomState\Stripe\Stripe\WebhookSigner;
 
+/**
+ * @group integration
+ */
 class WebhooksTest extends TestCase
 {
     use WebhooksContractTests;
