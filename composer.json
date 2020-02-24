@@ -32,5 +32,12 @@
       "RandomState\\Mint\\Tests\\": "tests",
       "Tests\\": "vendor/laravel/laravel/tests"
     }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "RandomState\\Mint\\MintServiceProvider"
+      ]
+    }
   }
 }

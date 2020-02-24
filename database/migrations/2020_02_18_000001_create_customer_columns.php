@@ -14,7 +14,7 @@ class CreateCustomerColumns extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('stripe_id')->nullable()->index();
+            $table->string('stripe_id')->charset('utf8_bin')->nullable()->index();
         });
     }
 

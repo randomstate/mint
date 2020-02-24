@@ -28,7 +28,7 @@ class MintServiceProvider extends ServiceProvider
             $events->subscribe(StripeWebhookSubscriber::class);
         }
 
-        BaseStripe::setApiVersion(config('mint.api_version'));
+        BaseStripe::setApiVersion('2019-12-03');
         BaseStripe::setApiKey(config('mint.secret_key'));
     }
 
@@ -40,7 +40,7 @@ class MintServiceProvider extends ServiceProvider
 
         $this->app->bind(VerifyStripeSignature::class, function () {
             return new VerifyStripeSignature(
-                config('mint.secret_key'),
+                config('mint.webhooks.signing_secret'),
                 config('mint.tolerance'),
             );
         });
