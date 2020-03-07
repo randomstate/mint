@@ -6,8 +6,10 @@ namespace RandomState\Mint;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Builder;
 use RandomState\Mint\Events\PaymentActionRequiredOffSession;
 use RandomState\Mint\Events\PaymentErrorOffSession;
+use RandomState\Mint\Exceptions\ExpiredSubscription;
 use RandomState\Mint\Exceptions\PaymentActionRequired;
 use RandomState\Mint\Exceptions\PaymentError;
 use RandomState\Mint\Mint\Billing;
@@ -110,7 +112,7 @@ class Subscription extends Model
 
     public function billable()
     {
-        return $this->belongsTo(config('mint.model'), 'billable_id');
+        return $this->belongsTo(config('mint.model'), 'billable_id', 'stripe_id');
     }
 
     public function invoice()
@@ -220,5 +222,25 @@ class Subscription extends Model
     public function makeChanges()
     {
         return new SubscriptionUpdater($this);
+    }
+
+    public function scopeActive(Builder $query)
+    {
+        return $query->whereIn('status', static::$activeStates);
+    }
+
+    /*
+     * Validate the subscription by checking status & payment intent status
+     */
+    public function validate()
+    {
+        $stripeSubscription = $this->asStripe(['expand' => ['latest_invoice.payment_intent']]);
+        if($stripeSubscription->status === StripeSubscription::STATUS_INCOMPLETE_EXPIRED) {
+            throw new ExpiredSubscription($this);
+        }
+
+        (new Payment($stripeSubscription->latest_invoice->payment_intent))->validate();
+
+        return true;
     }
 }

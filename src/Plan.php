@@ -21,7 +21,7 @@ class Plan extends Model
     use SoftDeletes, Billing;
 
     protected $guarded = [];
-    protected $casts = ['metadata' => 'json'];
+    protected $casts = ['metadata' => 'json', 'product_metadata' => 'json'];
 
     public function syncFromStripe(StripePlan $plan)
     {
@@ -43,6 +43,7 @@ class Plan extends Model
         $this->product_name = $plan->product->name;
         $this->product_description = $plan->product->description;
         $this->product_unit_label = $plan->product->unit_label;
+        $this->product_metadata = $plan->product->metadata;
 
         $this->save();
     }

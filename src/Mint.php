@@ -4,11 +4,19 @@
 namespace RandomState\Mint;
 
 
+use Closure;
 use RandomState\Mint\Mint\Plans;
 use RandomState\Stripe\BillingProvider;
 
 class Mint
 {
+    public static $ignoreMigrations = false;
+
+    /**
+     * @var null | Closure
+     */
+    public static $billableResolver = null;
+
     /**
      * @var BillingProvider
      */
@@ -31,6 +39,10 @@ class Mint
 
     public function billable($customerId)
     {
+        if(static::$billableResolver) {
+            return (static::$billableResolver)($customerId);
+        }
+
         return config('mint.model')::where('stripe_id', $customerId)->firstOrFail();
     }
 }

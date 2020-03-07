@@ -32,7 +32,7 @@ class WebhooksTest extends TestCase
 
         $this->webhooks = new WebhookListener(
             new Events(config('mint.secret_key')),
-            new WebhookSigner(config('mint.secret_key'))
+            new WebhookSigner(config('mint.webhooks.signing_secret'))
         );
     }
 }

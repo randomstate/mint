@@ -100,12 +100,12 @@ trait Billable
      */
     public function subscription()
     {
-        return $this->subscriptions()->first();
+        return $this->subscriptions()->orderByDesc('created_at')->first();
     }
 
     public function subscriptions()
     {
-        return $this->hasMany(Subscription::class, 'billable_id');
+        return $this->hasMany(Subscription::class, 'billable_id', 'stripe_id');
     }
 
     public function invoice(array $options = [])

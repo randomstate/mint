@@ -12,6 +12,7 @@ use RandomState\Mint\Http\Controllers\StripeWebhookController;
 use RandomState\Mint\Http\Middleware\VerifyStripeSignature;
 use RandomState\Stripe\BillingProvider;
 use RandomState\Stripe\Stripe;
+use Stripe\PaymentIntent;
 use Stripe\Stripe as BaseStripe;
 use RandomState\Stripe\Fake;
 
@@ -20,7 +21,10 @@ class MintServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->mergeConfigFrom(__DIR__ . '/../config/mint.php', 'mint');
-        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+
+        if(!Mint::$ignoreMigrations) {
+            $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+        }
 
         if(config('mint.webhooks.sync')) {
             /** @var Dispatcher $events */
@@ -35,6 +39,8 @@ class MintServiceProvider extends ServiceProvider
             Route::post(config('mint.webhooks.path'),
                 [StripeWebhookController::class, 'process'])->name('mint.stripe.webhook');
         });
+
+        $this->registerPublishes();
     }
 
     public function register()
@@ -51,6 +57,17 @@ class MintServiceProvider extends ServiceProvider
         });
 
         $this->provideTestExpansions();
+    }
+
+    protected function registerPublishes()
+    {
+        $this->publishes([
+            __DIR__.'/../config/mint.php' => $this->app->configPath('mint.php'),
+        ], 'mint-config');
+
+        $this->publishes([
+            __DIR__.'/../database/migrations' => $this->app->databasePath('migrations'),
+        ], 'mint-migrations');
     }
 
     protected function provideTestExpansions()
@@ -84,6 +101,10 @@ class MintServiceProvider extends ServiceProvider
 
         Fake\Subscription::expand('latest_invoice', function() {
             return Fake\Invoice::constructFrom([]);
+        });
+
+        Fake\Invoice::expand('payment_intent', function() {
+           return PaymentIntent::constructFrom([]);
         });
     }
 }

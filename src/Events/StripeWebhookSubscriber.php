@@ -69,7 +69,7 @@ class StripeWebhookSubscriber implements ShouldQueue
 
         $subscription = Subscription::firstOrNew([
             'stripe_id' => $stripeSubscription->id,
-            'billable_id' => $this->getBillable($stripeSubscription->customer)->id,
+            'billable_id' => $stripeSubscription->customer,
         ])
             ->syncFromStripe($stripeSubscription)
             ->syncItemsFromStripe($stripeSubscription);
@@ -85,7 +85,7 @@ class StripeWebhookSubscriber implements ShouldQueue
 
         $subscription = Subscription::firstOrNew([
             'stripe_id' => $stripeSubscription->id,
-            'billable_id' => $this->getBillable($stripeSubscription->customer)->id,
+            'billable_id' => $stripeSubscription->customer,
         ])
             ->syncFromStripe($stripeSubscription);
 

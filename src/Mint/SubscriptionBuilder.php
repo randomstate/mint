@@ -35,7 +35,7 @@ class SubscriptionBuilder
      */
     protected $coupon = null;
 
-    public function __construct(User $billable, array $plans)
+    public function __construct($billable, array $plans)
     {
         $this->billable = $billable;
         $this->items = $this->toSubscriptionItemBuilders($plans);
@@ -81,21 +81,12 @@ class SubscriptionBuilder
             ->subscriptions()
             ->create($payload);
 
-
-        DB::beginTransaction();
-
         $subscription = Subscription::create([
             'stripe_id' => $stripeSubscription->id,
-            'billable_id' => $this->billable->id,
+            'billable_id' => $this->billable->stripeCustomerId(),
             'trial_ends_at' => $stripeSubscription->trial_end,
             'status' => $stripeSubscription->status,
         ]);
-
-        if ($subscription->incomplete()) {
-            (new Payment(
-                $stripeSubscription->latest_invoice->payment_intent
-            ))->validate();
-        }
 
         $items = [];
         foreach ($stripeSubscription->items as $item) {
@@ -108,7 +99,11 @@ class SubscriptionBuilder
 
         $subscription->items()->createMany($items);
 
-        DB::commit();
+        if ($subscription->incomplete()) {
+            (new Payment(
+                $stripeSubscription->latest_invoice->payment_intent
+            ))->validate();
+        }
 
         return $subscription;
     }

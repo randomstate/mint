@@ -29,6 +29,7 @@ class CreatePlansTable extends Migration
             $table->string('product_name');
             $table->string('product_description')->nullable();
             $table->string('product_unit_label')->nullable();
+            $table->json('product_metadata')->nullable();
             $table->string('custom_price_description')->nullable();
             $table->softDeletes();
 
