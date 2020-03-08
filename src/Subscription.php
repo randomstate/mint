@@ -239,6 +239,11 @@ class Subscription extends Model
             throw new ExpiredSubscription($this);
         }
 
+        // May have a 100% off coupon that causes no payment intents.
+        if(!$stripeSubscription->latest_invoice->payment_intent) {
+            return true;
+        }
+
         (new Payment($stripeSubscription->latest_invoice->payment_intent))->validate();
 
         return true;
